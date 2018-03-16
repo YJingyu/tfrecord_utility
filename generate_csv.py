@@ -3,7 +3,7 @@ import csv
 import os
 
 FORMAT = ["json"]
-FILE_DIR = "/home/robin/Desktop/export/feature36"
+FILE_DIR = "/home/robin/Documents/landmark/223K"
 
 
 def main():

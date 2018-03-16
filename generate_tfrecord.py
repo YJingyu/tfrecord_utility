@@ -81,9 +81,13 @@ def _create_tf_example(data):
 
     # Draw heat on map.
     heat_maps = []
-    for point in label_marks:
+    for idx in range(len(label_marks)):
         heat_map = np.zeros((64, 64), dtype=np.float32)
-        put_heat(heat_map, point, sigma=1.9)
+        for point_idx, point in enumerate(label_marks):
+            if idx == point_idx:
+                put_heat(heat_map, point, sigma=1.9)
+            else:
+                put_heat(heat_map, point, sigma=1.9, negative=True)
         heat_map_serialized = heat_map.flatten()
         heat_maps.append(heat_map_serialized)
 

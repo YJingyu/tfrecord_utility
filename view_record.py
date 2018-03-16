@@ -62,6 +62,9 @@ def show_record(filenames):
 
     heatmap_tensor = tf.sparse_to_dense(hm_index, hm_shape, hm_value)
 
+    heatmap_tensor = tf.reshape(heatmap_tensor, [-1, 64, 64])
+    heatmap_tensor = tf.transpose(heatmap_tensor, [1, 2, 0])
+
     # Use openCV for preview
     # cv2.namedWindow("image", cv2.WINDOW_NORMAL)
 
@@ -71,12 +74,15 @@ def show_record(filenames):
             try:
                 image_tensor, raw_points, heatmap_float = sess.run(
                     [image_decoded, points, heatmap_tensor])
-                heatmap_all = np.reshape(heatmap_float, (-1, 64, 64))
-                heatmap_all = np.sum(heatmap_all, axis=0)
+                # heatmap_all = np.reshape(heatmap_float, (64, 64, 68))
+                # heatmap_all = np.sum(heatmap_all, axis=0)
+                heatmap_all = heatmap_float[:, :, 32]
 
                 # Preview heatmap.
-                heatmap_img = np.array(heatmap_all * 255, np.uint8)
-                heatmap_img = cv2.cvtColor(heatmap_img, cv2.COLOR_GRAY2BGR)
+                heatmap_img = np.array(heatmap_all)
+                print(heatmap_img.min())
+
+                # heatmap_img = cv2.cvtColor(heatmap_img, cv2.COLOR_GRAY2BGR)
 
                 # Use OpenCV to preview the image.
                 image = np.array(image_tensor, np.uint8)
@@ -105,7 +111,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--record",
         type=str,
-        default="train.record",
+        default="data.record",
         help="The record file."
     )
     args = parser.parse_args()
