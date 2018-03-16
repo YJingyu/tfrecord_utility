@@ -87,7 +87,9 @@ def _create_tf_example(data):
             if idx == point_idx:
                 put_heat(heat_map, point, sigma=1.9)
             else:
-                put_heat(heat_map, point, sigma=1.9, negative=True)
+                x = int(point[0])
+                y = int(point[1])
+                heat_map[y][x] = -0.999
         heat_map_serialized = heat_map.flatten()
         heat_maps.append(heat_map_serialized)
 
