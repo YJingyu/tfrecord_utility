@@ -5,13 +5,11 @@ Usage:
         --csv_input=data/data_train.csv \
         --img_folder=images \
         --output_file=train.record
-
     # Create validation record:
     python generate_tfrecord.py \
         --csv_input=data/data_validation.csv \
         --img_folder=images \
         --output_file=validation.record
-
     # Create test record:
     python generate_tfrecord.py \
         --csv_input=data/data_test.csv  \
@@ -22,7 +20,7 @@ from __future__ import division, print_function
 
 import argparse
 import io
-import os
+import json
 import sys
 
 import pandas as pd
@@ -36,6 +34,10 @@ def _int64_feature(value):
     return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
 
 
+def _float32_feature(value):
+    return tf.train.Feature(float_list=tf.train.FloatList(value=value))
+
+
 def _bytes_feature(value):
     return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
 
@@ -44,22 +46,25 @@ def _create_tf_example(data):
     """
     create TFRecord example from a single row of data.
     """
-    # File path url
-    full_path = os.path.join(os.getcwd(), FLAGS.img_folder,
-                             '{}'.format(data['name']))
+    # Encode jpg file.
+    img_url = data['jpg']
+    img_name = data['jpg'].split('.')[-2]
 
     # Read encoded image file, and get properties we need.
-    with tf.gfile.GFile(full_path, 'rb') as fid:
+    with tf.gfile.GFile(img_url, 'rb') as fid:
         encoded_jpg = fid.read()
     encoded_jpg_io = io.BytesIO(encoded_jpg)
     image = Image.open(encoded_jpg_io)
     width, height = image.size
-    filename = data['name'].encode('utf8')
+    filename = img_name.encode('utf8')
     image_format = b'jpg'
-    label_x = data['x']
-    label_y = data['y']
 
-    # After geting all the features, time to generate tensorflow record file.
+    # Encode json file.
+    json_url = data['json']
+    with open(json_url) as json_file:
+        points = json.load(json_file)
+
+    # After getting all the features, time to generate a TensorFlow example.
     tf_example = tf.train.Example(features=tf.train.Features(feature={
         'image/height': _int64_feature(height),
         'image/width': _int64_feature(width),
@@ -67,8 +72,7 @@ def _create_tf_example(data):
         'image/source_id': _bytes_feature(filename),
         'image/encoded': _bytes_feature(encoded_jpg),
         'image/format': _bytes_feature(image_format),
-        'label/x': _int64_feature(label_x),
-        'label/y': _int64_feature(label_y),
+        'label/points': _float32_feature(points),
     }))
     return tf_example
 
